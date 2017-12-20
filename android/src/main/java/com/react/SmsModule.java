@@ -76,39 +76,43 @@ public class SmsModule extends ReactContextBaseJavaModule /*implements LoaderMan
                     null);
             int c = 0;
             JSONArray jsons = new JSONArray();
-            while (cursor.moveToNext()) {
-                boolean matchFilter = false;
-                if (fid > -1)
-                    matchFilter = fid == cursor.getInt(cursor.getColumnIndex("_id"));
-                else if (fread > -1)
-                    matchFilter = fread == cursor.getInt(cursor.getColumnIndex("read"));
-                else if (faddress.length() > 0)
-                    matchFilter = faddress.equals(cursor.getString(cursor.getColumnIndex("address")).trim());
-                else if (fcontent.length() > 0)
-                    matchFilter = fcontent.equals(cursor.getString(cursor.getColumnIndex("body")).trim());
-                else {
-                    matchFilter = true;
-                }
-                if (matchFilter) {
-                    if (c >= indexFrom) {
-                        if (maxCount > 0 && c >= indexFrom + maxCount)
-                            break;
-                        c++;
-                        // Long dateTime = Long.parseLong(cursor.getString(cursor.getColumnIndex("date")));
-                        // String message = cursor.getString(cursor.getColumnIndex("body"));
-                        JSONObject json;
-                        json = getJsonFromCursor(cursor);
-                        jsons.put(json);
-
+            if (cursor != null) {
+                while (cursor.moveToNext()) {
+                    boolean matchFilter = false;
+                    if (fid > -1)
+                        matchFilter = fid == cursor.getInt(cursor.getColumnIndex("_id"));
+                    else if (fread > -1)
+                        matchFilter = fread == cursor.getInt(cursor.getColumnIndex("read"));
+                    else if (faddress.length() > 0)
+                        matchFilter = faddress.equals(cursor.getString(cursor.getColumnIndex("address")).trim());
+                    else if (fcontent.length() > 0)
+                        matchFilter = fcontent.equals(cursor.getString(cursor.getColumnIndex("body")).trim());
+                    else {
+                        matchFilter = true;
                     }
-                }
+                    if (matchFilter) {
+                        if (c >= indexFrom) {
+                            if (maxCount > 0 && c >= indexFrom + maxCount)
+                                break;
+                            c++;
+                            // Long dateTime = Long.parseLong(cursor.getString(cursor.getColumnIndex("date")));
+                            // String message = cursor.getString(cursor.getColumnIndex("body"));
+                            JSONObject json;
+                            json = getJsonFromCursor(cursor);
+                            jsons.put(json);
 
-            }
-            cursor.close();
-            try {
-                successCallback.invoke(c, jsons.toString());
-            } catch (Exception e) {
-                errorCallback.invoke(e.getMessage());
+                        }
+                    }
+
+                }
+                cursor.close();
+                try {
+                    successCallback.invoke(c, jsons.toString());
+                } catch (Exception e) {
+                    errorCallback.invoke(e.getMessage());
+                }
+            } else {
+                errorCallback.invoke("Failed to find provider info for sms");
             }
         } catch (JSONException e) {
             errorCallback.invoke(e.getMessage());
